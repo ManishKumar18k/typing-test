@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Advanced Typing Test</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+                text-align: center;
+                margin-top: 20px;
+            }
+            .container {
+                background: white;
+                max-width: 800px;
+                margin: auto;
+                padding: 25px;
+                border-radius: 10px;
+                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            }
+            /* Control Panel for Time and Topic selection */
+            .controls {
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+                background: #eef2f5;
+                padding: 15px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            select, input[type="number"] {
+                padding: 8px;
+                font-size: 15px;
+                border-radius: 5px;
+                border: 1px solid #ccc;
+            }
+            #custom-time-input {
+                width: 70px;
+                display: none;
+            }
+            
+            /* Scrollable Target Text Container */
+            #text-box {
+                max-height: 180px;
+                overflow-y: auto;
+                border: 2px solid #ddd;
+                padding: 15px;
+                border-radius: 8px;
+                background-color: #fafafa;
+                text-align: left;
+                margin-bottom: 20px;
+            }
+            #text {
+                font-size: 19px;
+                letter-spacing: 1px;
+                line-height: 1.8;
+                word-wrap: break-word;
+            }
+            /* Characters Highlight Styling */
+            .correct { color: green; }
+            .incorrect { color: red; text-decoration: underline; }
+            .current {
+                background-color: #ff4d4d;
+                color: white;
+                padding: 2px 4px;
+                border-radius: 3px;
+            }
+            /* Scrollable Textarea Input */
+            textarea {
+                font-size: 18px;
+                padding: 10px;
+                width: 95%;
+                height: 120px;
+                margin-bottom: 15px;
+                resize: vertical;
+                border-radius: 5px;
+                border: 1px solid #ccc;
+                font-family: Arial, sans-serif;
+            }
+            button {
+                padding: 10px 25px;
+                font-size: 16px;
+                cursor: pointer;
+                background-color: #007bff;
+                color: white;
+                border: none;
+                border-radius: 5px;
+            }
+            button:hover { background-color: #0056b3; }
+            #time { font-size: 32px; font-weight: bold; color: #333; }
+            .danger { color: red !important; }
+            
+            /* Live Stats Display */
+            .stats-box {
+                display: flex;
+                justify-content: space-around;
+                margin-top: 20px;
+                font-size: 18px;
+                font-weight: bold;
+            }
+            .stat-item {
+                background: #eef2f5;
+                padding: 10px 20px;
+                border-radius: 8px;
+            }
+        </style>
+    </head>
+    <body>
+
+        <div class="container">
+            <h1>Typing Speed Test</h1>
+
+            <!-- Custom Controls Section -->
+            <div class="controls">
+                <div>
+                    <label><b>Select Topic:</b> </label>
+                    <select id="topic-select" onchange="changeTopic()">
+                        <option value="nehru">Pt. Jawaharlal Nehru (History)</option>
+                        <option value="java">Java Programming (Tech)</option>
+                        <option value="nature">Importance of Trees (Environment)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label><b>Time Limit:</b> </label>
+                    <select id="time-select" onchange="handleTimeChange()">
+                        <option value="15">15 Seconds</option>
+                        <option value="30">30 Seconds</option>
+                        <option value="60" selected>1 Minute</option>
+                        <option value="custom">Custom Time</option>
+                    </select>
+                    <input type="number" id="custom-time-input" placeholder="Sec" min="5" max="600" onchange="applyCustomTime()">
+                </div>
+            </div>
+
+            <p id="time">60</p>
+
+            <!-- Scrollable Target Text Area -->
+            <div id="text-box">
+                <p id="text"></p>
+            </div>
+
+            <!-- Scrollable User Input Area -->
+            <textarea id="user" placeholder="Start typing here..." oninput="checkInput()" autofocus></textarea><br>
+            <button onclick="restart()">Reset Test</button>
+
+            <!-- Live Stats Display -->
+            <div class="stats-box">
+                <div class="stat-item">WPM: <span id="wpm">0</span></div>
+                <div class="stat-item">Accuracy: <span id="accuracy">100</span>%</div>
+                <div class="stat-item">Errors: <span id="errors">0</span></div>
+            </div>
+        </div>
+
+        <script>
+            // Multi Typing Passages List
+            const passages = {
+                nehru: "Pt. Jawaharlal Nehru was born in Allabahad on November 14, 1889. He received his early education at home under private tutors. At the age of fifteen, he went to England and after two years at Harrow, joined Cambridge University where he took his tripos in Natural Sciences. He was later called to the Bar from Inner Temple. He returned to India in 1912 and plunged straight into politics. Even as a student, he had been interested in the struggle of all nations who suffered under foreign domination. Jawaharlal Nehru was born on 14 November 1889 in Allahabad in British India to Swarup Rani and Motilal Nehru. Both parents belonged to the community of Kashmiri Pandits. He grew up in an atmosphere of privilege in the mansion Anand Bhavan and was educated at home by private governesses and tutors. Nehru became an ardent nationalist during his youth. In 1905, he began his institutional schooling at Harrow School in England. He went to Trinity College, Cambridge, in October 1907 and graduated with an honours degree in natural science in 1910. He then studied law at the Inner Temple and was called to the Bar in 1912. After returning to India in August 1912, Nehru enrolled at the Allahabad High Court as a barrister, but his involvement in nationalist politics gradually replaced his legal practice. He joined the Indian National Congress and worked closely with Home Rule Leagues and Mahatma Gandhi. Nehru assumed the presidency of the Congress party during the Lahore session in December 1929 and introduced a resolution calling for complete independence (Purna Swaraj). On New Year's Eve 1929, he hoisted the tricolour flag of India upon the banks of the Ravi in Lahore. Upon India's independence on 15 August 1947, Nehru was sworn in as the first Prime Minister of independent India and delivered his famous 'Tryst with Destiny' speech. He served as prime minister for 16 years and 286 days until his death in 1964. Nehru implemented policies based on import substitution industrialisation and advocated a mixed economy. He promoted education by establishing institutions like AIIMS, IITs, and IIMs, and reformed Hindu personal law through the Hindu code bills. In foreign affairs, Nehru co-founded the Non-Aligned Movement (NAM) during the Cold War. He championed the Five Principles of Peaceful Coexistence (Panchsheel) with China and sought strong ties with the Commonwealth. Nehru's health began declining in 1962, and he passed away on 27 May 1964 following a heart attack. He was cremated at Shantivan on the banks of the Yamuna in Delhi.",
+                java: "Java is a popular high-level, class-based, object-oriented programming language designed to have as few implementation dependencies as possible. It is intended to let application developers write once, run anywhere (WORA), meaning that compiled Java code can run on all platforms that support Java without the need for recompilation. Java applications are typically compiled to bytecode that can run on any Java Virtual Machine (JVM).",
+                nature: "Trees are essential for human life and the environment. They provide oxygen, improve air quality, climate amelioration, conserve water, preserve soil, and support wildlife. During the process of photosynthesis, trees take in carbon dioxide and produce the oxygen we breathe. Planting more trees is one of the most effective ways to combat climate change and maintain ecological balance."
+            };
+
+            let initialTime = 60;
+            let second = initialTime;
+            let timer = null;
+            let isTypingStarted = false;
+            let totalErrors = 0;
+            let targetText = passages["nehru"];
+
+            function changeTopic() {
+                const selectedTopic = document.getElementById("topic-select").value;
+                targetText = passages[selectedTopic];
+                restart();
+            }
+
+            function handleTimeChange() {
+                const selectVal = document.getElementById("time-select").value;
+                const customInput = document.getElementById("custom-time-input");
+
+                if (selectVal === "custom") {
+                    customInput.style.display = "inline-block";
+                    customInput.value = initialTime;
+                } else {
+                    customInput.style.display = "none";
+                    initialTime = parseInt(selectVal);
+                    restart();
+                }
+            }
+
+            function applyCustomTime() {
+                const val = parseInt(document.getElementById("custom-time-input").value);
+                if (val && val > 0) {
+                    initialTime = val;
+                    restart();
+                }
+            }
+
+            function renderText() {
+                const textContainer = document.getElementById("text");
+                textContainer.innerHTML = "";
+                for (let i = 0; i < targetText.length; i++) {
+                    let charSpan = document.createElement("span");
+                    charSpan.innerText = targetText[i];
+                    textContainer.appendChild(charSpan);
+                }
+                highlightCurrentChar();
+            }
+
+            function highlightCurrentChar() {
+                const inputVal = document.getElementById("user").value;
+                const spans = document.getElementById("text").querySelectorAll("span");
+                let errors = 0;
+                let correctChars = 0;
+
+                spans.forEach((span, index) => {
+                    span.className = "";
+                    if (index < inputVal.length) {
+                        if (inputVal[index] === targetText[index]) {
+                            span.classList.add("correct");
+                            correctChars++;
+                        } else {
+                            span.classList.add("incorrect");
+                            errors++;
+                        }
+                    } else if (index === inputVal.length) {
+                        span.classList.add("current");
+                        span.scrollIntoView({ behavior: "smooth", block: "nearest" });
+                    }
+                });
+
+                totalErrors = errors;
+                document.getElementById("errors").innerText = totalErrors;
+
+                // WPM Calculation
+                let timeElapsed = initialTime - second;
+                if (timeElapsed > 0) {
+                    let wpm = Math.round((correctChars / 5) / (timeElapsed / 60));
+                    document.getElementById("wpm").innerText = wpm >= 0 ? wpm : 0;
+                }
+
+                // Accuracy Calculation
+                if (inputVal.length > 0) {
+                    let accuracy = Math.round(((inputVal.length - errors) / inputVal.length) * 100);
+                    document.getElementById("accuracy").innerText = accuracy >= 0 ? accuracy : 0;
+                } else {
+                    document.getElementById("accuracy").innerText = 100;
+                }
+
+                if (inputVal === targetText) {
+                    endTest("🎉 Test Completed!");
+                }
+            }
+
+            function checkInput() {
+                if (!isTypingStarted) {
+                    startTimer();
+                    isTypingStarted = true;
+                }
+                highlightCurrentChar();
+            }
+
+            function startTimer() {
+                if (timer !== null) return;
+
+                timer = setInterval(function () {
+                    second--;
+                    const timeElem = document.getElementById("time");
+                    timeElem.innerText = second;
+
+                    if (second < 10) {
+                        timeElem.className = "danger";
+                    }
+
+                    if (second <= 0) {
+                        endTest("⏱️ Time Up!");
+                    }
+                }, 1000);
+            }
+
+            function endTest(message) {
+                clearInterval(timer);
+                document.getElementById("user").disabled = true;
+                
+                const finalWpm = document.getElementById("wpm").innerText;
+                const finalAcc = document.getElementById("accuracy").innerText;
+                
+                setTimeout(() => {
+                    alert(`${message}\nFinal WPM: ${finalWpm}\nAccuracy: ${finalAcc}%`);
+                }, 100);
+            }
+
+            function restart() {
+                clearInterval(timer);
+                timer = null;
+                second = initialTime;
+                isTypingStarted = false;
+
+                const timeElem = document.getElementById("time");
+                timeElem.innerText = second;
+                timeElem.className = "";
+
+                const inputElem = document.getElementById("user");
+                inputElem.value = "";
+                inputElem.disabled = false;
+                inputElem.focus();
+
+                document.getElementById("wpm").innerText = 0;
+                document.getElementById("accuracy").innerText = 100;
+                document.getElementById("errors").innerText = 0;
+
+                renderText();
+                document.getElementById("text-box").scrollTop = 0;
+            }
+
+            // Initial Setup
+            renderText();
+            document.getElementById("time").innerText = initialTime;
+        </script>
+    </body>
+</html>
